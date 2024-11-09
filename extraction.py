@@ -69,22 +69,19 @@ submissions_schema = types.StructType([
     types.StructField('month', types.IntegerType()),
 ])
 
-reddit_submissions_path = '/courses/datasets/reddit_submissions_repartitioned/'
-reddit_comments_path = '/courses/datasets/reddit_comments_repartitioned/'
+reddit_submissions_path = '/courses/datasets/reddit_submissions_repartitioned/year=2021'
+reddit_comments_path = '/courses/datasets/reddit_comments_repartitioned/year=2021'
 
 def main(output):
     
     reddit_submissions = spark.read.json(reddit_submissions_path, schema=submissions_schema)
     reddit_comments = spark.read.json(reddit_comments_path, schema=comments_schema)
-    subs = ['CanadaPolitics', 'Canada', 'Canadian', 'Liberal', 'OnGuardForThee','Conservative',
-            'CanadaLeft','CanadianConservative']
+    subs = ['CanadaPolitics', 'Canada', 'Canadian', 'OnGuardForThee', 'CanadaLeft', 'CanadianConservative']
     subs = list(map(functions.lit, subs))
     reddit_submissions.where(reddit_submissions['subreddit'].isin(subs)) \
-        .where(reddit_submissions['year'] == 2021) \
-        .write.json(output + '/submissions', mode='overwrite', compression='gzip')
+        .write.parquet(output + '/submissions', mode='overwrite', compression='gzip')
     reddit_comments.where(reddit_comments['subreddit'].isin(subs)) \
-        .where(reddit_comments['year'] == 2021) \
-        .write.json(output + '/comments', mode='overwrite', compression='gzip')
+        .write.parquet(output + '/comments', mode='overwrite', compression='gzip')
 
     
 
@@ -95,4 +92,6 @@ if __name__ == '__main__':
     spark = SparkSession.builder.appName('reddit extraction').getOrCreate()
     sc = spark.sparkContext
     spark.sparkContext.setLogLevel("WARN")
+    spark.conf.set("spark.sql.debug.maxToStringFields", "1000")
     main(output)
+    
