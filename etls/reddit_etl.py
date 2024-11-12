@@ -46,42 +46,37 @@ def create_table_script(conn: psycopg2.extensions.connection ):
 
     # Define the SQL query to create the reddit_submissions table
     create_table_query = """
-        CREATE TABLE reddit_submissions (
-            created_utc TIMESTAMP,
-            id TEXT PRIMARY KEY,
-            num_comments INT,
-            score INT,
-            subreddit TEXT,
-            subreddit_id TEXT,
-            title TEXT,
-            ups INT,
-            downs INT,
-            year INT,
-            month INT
-        );  
+    CREATE TABLE IF NOT EXISTS reddit_submissions (
+        id VARCHAR PRIMARY KEY,
+        subreddit VARCHAR,
+        created_utc TIMESTAMP,
+        downs INT,
+        author VARCHAR,
+        score INT,
+        ups INT,
+        title TEXT,
+        url TEXT
+    );
     """
 
     # Execute the query to create the table
     cur.execute(create_table_query)
 
     create_table_query = """
-        CREATE TABLE reddit_comments (
-            body TEXT,
-            controversiality INT,
-            created_utc TIMESTAMP,
-            downs INT,
-            id TEXT PRIMARY KEY,
-            link_id TEXT,
-            parent_id TEXT,
-            score INT,
-            subreddit TEXT,
-            subreddit_id TEXT,
-            ups INT,
-            author TEXT,
-            year INT,
-            month INT,
-            author_flair_text TEXT
-        );
+    CREATE TABLE IF NOT EXISTS reddit_comments (
+        id TEXT PRIMARY KEY,
+        post_title TEXT,
+        parent_id TEXT,
+        parent_type TEXT,
+        author TEXT,
+        body TEXT,
+        created_utc TIMESTAMP,
+        score INTEGER,
+        subreddit TEXT,
+        controversiality INTEGER,
+        downs INTEGER,
+        ups INTEGER
+    );
     """
     # Execute the create table query
     cur.execute(create_table_query)
