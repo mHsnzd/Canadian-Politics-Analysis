@@ -1,0 +1,13 @@
+# Ignore all config.conf files in any directory
+**/config.conf
+
+# Ignore the logs directory
+/logs
+
+# Ignore all __pycache__ directories
+**/__pycache__/
+
+# Ignore everything in data/output and data/input, but keep the directories themselves
+data/output/*
+data/input/*
+
