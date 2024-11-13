@@ -23,7 +23,7 @@ dt = datetime.combine(datetime.today(), time.min)
 dag = DAG(
     dag_id='reddit_etl_aws',
     default_args=default_args,
-    schedule_interval='@daily',
+    schedule_interval='30 0 * * *',  # Runs daily at 12:30 AM
     catchup=False,
     tags=['reddit', 'etl', 'pipeline', 'crawl', 'canada']
 )

@@ -19,7 +19,7 @@ previous_task = None
 dag = DAG(
     dag_id='reddit_crawler_job',
     default_args=default_args,
-    schedule_interval='0 */6 * * *',
+    schedule_interval='0 */3 * * *',
     catchup=False,
     tags=['reddit', 'etl', 'pipeline', 'crawl', 'canada']
 )
