@@ -16,33 +16,53 @@ def create_dataset(dt: datetime):
 
     try:
         # Query to retrieve comments within the specified timestamp range
-        query = """
-        SELECT *
-        FROM 
-            reddit_comments
-        WHERE 
-            created_utc >= to_timestamp(%s) AND created_utc < to_timestamp(%s)
+        comments_query = """
+        SELECT id, parent_id, author, body, created_utc, score, subreddit, subreddit_id, link_id
+        FROM reddit_comments
+        WHERE created_utc >= to_timestamp(%s) AND created_utc < to_timestamp(%s)
+        """
+        
+        # Query to retrieve submissions within the specified timestamp range
+        submissions_query = """
+        SELECT author, id, created_utc, num_comments, subreddit, subreddit_id, title, score, 
+               link_flair_template_id, link_flair_text
+        FROM reddit_submissions
+        WHERE created_utc >= to_timestamp(%s) AND created_utc < to_timestamp(%s)
         """
 
-        # Execute the query and fetch data
+        # Execute the comments query and fetch data
         with conn.cursor() as cur:
-            cur.execute(query, (start_timestamp, end_timestamp))
+            cur.execute(comments_query, (start_timestamp, end_timestamp))
             comments = cur.fetchall()
+            
+            # Execute the submissions query and fetch data
+            cur.execute(submissions_query, (start_timestamp, end_timestamp))
+            submissions = cur.fetchall()
 
-        # Convert to DataFrame for easy manipulation
-        columns = ["id", "parent_id", "parent_type", "author", "body", "created_utc", "score", 
-                   "subreddit", "controversiality", "downs", "ups"]
-        comments_df = pd.DataFrame(comments, columns=columns)
+        # Define columns for comments and submissions
+        comments_columns = ["id", "parent_id", "author", "body", "created_utc", "score", 
+                            "subreddit", "subreddit_id", "link_id"]
+        submissions_columns = ["author", "id", "created_utc", "num_comments", "subreddit", 
+                               "subreddit_id", "title", "score", "link_flair_template_id", 
+                               "link_flair_text"]
 
-        # Transform the data
+        # Convert fetched data to DataFrames for easy manipulation
+        comments_df = pd.DataFrame(comments, columns=comments_columns)
+        submissions_df = pd.DataFrame(submissions, columns=submissions_columns)
+
+        # Transform the data (assuming transform_data function handles both datasets)
         comments_df = transform_data(comments_df)
+        submissions_df = transform_data(submissions_df)
 
-        # Save DataFrame to a Parquet file in the output directory
-        output_file = os.path.join(OUTPUT_PATH, f"reddit_comments_{(dt - timedelta(days=1)).strftime('%Y%m%d')}.parquet")
-         
-        if len(comments) > 0:
-            comments_df.to_parquet(output_file, index=False)
-            print(f"Dataset saved to {output_file}")
+        # Save DataFrames to Parquet files in the output directory
+        comments_output_file = os.path.join(OUTPUT_PATH, f"reddit_comments_{(dt - timedelta(days=1)).strftime('%Y%m%d')}.parquet")
+        submissions_output_file = os.path.join(OUTPUT_PATH, f"reddit_submissions_{(dt - timedelta(days=1)).strftime('%Y%m%d')}.parquet")
+
+        comments_df.to_parquet(comments_output_file, index=False)
+        print(f"Comments dataset saved to {comments_output_file}")
+        
+        submissions_df.to_parquet(submissions_output_file, index=False)
+        print(f"Submissions dataset saved to {submissions_output_file}")
 
         # # Delete retrieved comments from the database
         # delete_query = """
@@ -58,7 +78,7 @@ def create_dataset(dt: datetime):
     finally:
         conn.close()
 
-    return output_file
+    return comments_output_file, submissions_output_file
 
 
 def connect_to_s3():
