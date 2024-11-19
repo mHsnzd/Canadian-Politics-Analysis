@@ -1,0 +1,5 @@
+test/
+data/
+NOTES.md
+show.py
+sentiment_analysis_spark_twitter.py
