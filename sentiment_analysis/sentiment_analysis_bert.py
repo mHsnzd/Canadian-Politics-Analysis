@@ -49,17 +49,19 @@ def main(input, output):
         result = model.predict(truncated_comment)[0] 
         return Row(label=result['label'], score=result['score'])
     
-    # Perform sentiment analysis, keep necessary columns
+    # Perform sentiment analysis
     analyzed_comments_df = comments_df.withColumn(
         'sentiment_analysis', 
         analyze_sentiment(comments_df[COMMENT_TXT_FIELD])
     ) 
 
-    result = analyzed_comments_df.select(
-        '*',
-        analyzed_comments_df['sentiment_analysis.label'].alias(SENTIMENT_LABEL_FIELD),
-        analyzed_comments_df['sentiment_analysis.score'].alias(SENTIMENT_SCORE_FIELD)
-    ).drop('sentiment_analysis')
+    result = analyzed_comments_df.withColumns({
+        SENTIMENT_LABEL_FIELD: analyzed_comments_df['sentiment_analysis.label'],
+        SENTIMENT_SCORE_FIELD: 
+            functions.when(analyzed_comments_df['sentiment_analysis.label']==functions.lit('POSITIVE'), analyzed_comments_df['sentiment_analysis.score']).
+            when(analyzed_comments_df['sentiment_analysis.label']==functions.lit('NEGATIVE'), -analyzed_comments_df['sentiment_analysis.score']).   
+            otherwise(0)
+    }).drop('sentiment_analysis')
 
     # Write the result to a Parquet file
     # result.show(truncate=False)
