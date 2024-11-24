@@ -1,6 +1,6 @@
 test/
 data/
+temp_files/
 NOTES.md
 show.py
-sentiment_analysis_spark_twitter.py
 instructions.sh

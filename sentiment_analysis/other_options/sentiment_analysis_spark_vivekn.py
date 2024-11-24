@@ -64,7 +64,7 @@ def main(input, output):
 
     # Write the result to a Parquet file
     # result.show(truncate=False)
-    result.repartition(20).write.parquet(output, mode='overwrite')
+    result.write.parquet(output, mode='overwrite')
 
 
 if __name__ == '__main__':

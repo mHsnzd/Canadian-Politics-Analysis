@@ -1,6 +1,8 @@
 """
 This script performs sentiment analysis on the labeled comments using Bert. 
 
+This model outputs a POSITIVE/NEGATIVE sentiment and it's score.
+
 To locally run the script use the command:
 spark-submit sentiment_analysis_spark.py input-parquet-path output-parquet-path
 
@@ -10,9 +12,7 @@ spark-submit sentiment_analysis_spark.py input-parquet-path output-parquet-path
 import sys
 assert sys.version_info >= (3, 5) # Make sure we have Python 3.5+
 from transformers import pipeline
-from pyspark.sql.functions import udf
-from pyspark.sql.types import StringType
-from pyspark.sql import SparkSession, functions, types
+from pyspark.sql import SparkSession, functions, types, Row
 
 
 # Constants
@@ -21,6 +21,8 @@ COMMENT_TXT_FIELD = 'body'
 PARTY_LABEL_FIELD = 'label'
 PARTY_LABELS = ['conservative', 'liberal'] 
 SENTIMENT_LABEL_FIELD = 'sentiment'
+SENTIMENT_SCORE_FIELD = 'sentiment_score'
+PARTITION_BY_FIELDS = ['subreddit','month']
 
 
 def main(input, output):
@@ -30,22 +32,41 @@ def main(input, output):
     comments_df = comments_df.filter(comments_df[PARTY_LABEL_FIELD].isin(PARTY_LABELS))
 
     # Define and use the pretrained model
-    model = pipeline('sentiment-analysis', model='distilbert-base-uncased-finetuned-sst-2-english')
+    model = pipeline(
+        'sentiment-analysis',
+        model='distilbert-base-uncased-finetuned-sst-2-english')
 
-    # Define a udf to implement the model on each comment body
-    @functions.udf(returnType=types.StringType())
+    # Define a udf to apply the sentiment model on each comment body
+    @functions.udf(returnType=types.StructType([ 
+        types.StructField('label', types.StringType(), True), 
+        types.StructField('score', types.FloatType(), True) 
+    ]))
     def analyze_sentiment(comment):
-        '''Truncate the body of comment to match the max size acceptable by the model and then apply the model on it'''
+        '''
+        Truncate the body of comment to match the max size acceptable by the model and then apply the model on it, Return sentiment and its score
+        '''
         truncated_comment = comment[:MAX_SEQ_LENGTH]
-        result = model.predict(truncated_comment)[0]
-        
-        return result['label']
+        result = model.predict(truncated_comment)[0] 
+        return Row(label=result['label'], score=result['score'])
     
-    comments_df = comments_df.withColumn(SENTIMENT_LABEL_FIELD, analyze_sentiment(comments_df[COMMENT_TXT_FIELD]))
+    # Perform sentiment analysis, keep necessary columns
+    analyzed_comments_df = comments_df.withColumn(
+        'sentiment_analysis', 
+        analyze_sentiment(comments_df[COMMENT_TXT_FIELD])
+    ) 
+
+    result = analyzed_comments_df.select(
+        '*',
+        analyzed_comments_df['sentiment_analysis.label'].alias(SENTIMENT_LABEL_FIELD),
+        analyzed_comments_df['sentiment_analysis.score'].alias(SENTIMENT_SCORE_FIELD)
+    ).drop('sentiment_analysis')
 
     # Write the result to a Parquet file
-    # comments_df.show(truncate=False)
-    comments_df.write.parquet(output, mode='overwrite')
+    # result.show(truncate=False)
+    result.write.\
+        partitionBy(PARTITION_BY_FIELDS).\
+        parquet(output, mode='overwrite')
+    
 
 
 if __name__ == '__main__':
