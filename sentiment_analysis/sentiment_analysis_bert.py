@@ -58,17 +58,20 @@ def main(input, output):
     result = analyzed_comments_df.withColumns({
         SENTIMENT_LABEL_FIELD: analyzed_comments_df['sentiment_analysis.label'],
         SENTIMENT_SCORE_FIELD: 
-            functions.when(analyzed_comments_df['sentiment_analysis.label']==functions.lit('POSITIVE'), analyzed_comments_df['sentiment_analysis.score']).
-            when(analyzed_comments_df['sentiment_analysis.label']==functions.lit('NEGATIVE'), -analyzed_comments_df['sentiment_analysis.score']).   
-            otherwise(0)
+            functions.when(
+                analyzed_comments_df['sentiment_analysis.label']==functions.lit('POSITIVE'), 
+                functions.lit(2) * analyzed_comments_df['sentiment_analysis.score'] - functions.lit(1)
+            ).when(
+                analyzed_comments_df['sentiment_analysis.label']==functions.lit('NEGATIVE'),
+                functions.lit(1) - functions.lit(2) * analyzed_comments_df['sentiment_analysis.score']
+            ).otherwise(0)
     }).drop('sentiment_analysis')
 
     # Write the result to a Parquet file
     # result.show(truncate=False)
     result.write.\
         partitionBy(PARTITION_BY_FIELDS).\
-        parquet(output, mode='overwrite')
-    
+        parquet(output, mode='overwrite')  
 
 
 if __name__ == '__main__':
