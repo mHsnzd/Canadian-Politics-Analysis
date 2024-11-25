@@ -1,11 +1,10 @@
 """
-This script performs sentiment analysis on the labeled comments using Bert. 
+This script performs sentiment analysis on the party-labeled comments using a Hugging Face pretrained model(distilbert). 
 
-This model outputs a POSITIVE/NEGATIVE sentiment and it's score.
+This model outputs a POSITIVE/NEGATIVE sentiment and its score.
 
 To locally run the script use the command:
-spark-submit sentiment_analysis_spark.py input-parquet-path output-parquet-path
-
+spark-submit sentiment_analysis_bert.py input-parquet-path output-parquet-path
 """
 
 
@@ -69,9 +68,9 @@ def main(input, output):
 
     # Write the result to a Parquet file
     # result.show(truncate=False)
-    result.write.\
-        partitionBy(PARTITION_BY_FIELDS).\
-        parquet(output, mode='overwrite')  
+    result.write\
+        .partitionBy(PARTITION_BY_FIELDS)\
+        .parquet(output, mode='overwrite')  
 
 
 if __name__ == '__main__':
