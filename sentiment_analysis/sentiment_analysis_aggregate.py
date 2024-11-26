@@ -40,7 +40,7 @@ def main(input, output):
     # Write the result to a CSV file
     avg_score_result.coalesce(1).write.csv(output+'/average_sentiment_score', mode='overwrite') 
 
-    count_sentiment_result.coalesce(1).write.csv(output+'/count_sentiment_type', mode='overwrite')
+    count_sentiment_result.coalesce(1).write.csv(output+'/count_sentiment_type', mode='overwrite', header=True)
 
 
 if __name__ == '__main__':
