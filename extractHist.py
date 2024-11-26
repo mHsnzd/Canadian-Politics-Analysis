@@ -1,3 +1,5 @@
+#Run this:
+#spark-submit extraction.py /courses/datasets/reddit_submissions_repartitioned/year=2020 /courses/datasets/reddit_comments_repartitioned/year=2020 reddit-2020
 import sys
 from pyspark.sql import SparkSession, functions, types, Row
 
@@ -69,18 +71,20 @@ submissions_schema = types.StructType([
     types.StructField('month', types.IntegerType()),
 ])
 
-reddit_submissions_path = '/courses/datasets/reddit_submissions_repartitioned/year=2021'
-reddit_comments_path = '/courses/datasets/reddit_comments_repartitioned/year=2021'
 
-def main(output):
-    
+def main(submissions_path, comments_path, output):
+    reddit_submissions_path = submissions_path
+    reddit_comments_path = comments_path
     reddit_submissions = spark.read.json(reddit_submissions_path, schema=submissions_schema)
     reddit_comments = spark.read.json(reddit_comments_path, schema=comments_schema)
-    subs = ['CanadaPolitics', 'Canada', 'Canadian', 'OnGuardForThee', 'CanadaLeft', 'CanadianConservative']
+    subs = ['CanadaPolitics', 'canada', 'canadian', 'onguardforthee', 'canadaleft', 'CanadianConservative']
     subs = list(map(functions.lit, subs))
     reddit_submissions.where(reddit_submissions['subreddit'].isin(subs)) \
+        .select('author', 'name', 'created_utc', 'num_comments', "title", 'subreddit', 'subreddit_id', 'score', 'link_flair_css_class',
+                                     'link_flair_text', 'author_flair_text', 'year', 'month')\
         .write.parquet(output + '/submissions', mode='overwrite', compression='gzip')
     reddit_comments.where(reddit_comments['subreddit'].isin(subs)) \
+        .select('author', 'body', 'created_utc' ,'id', 'link_id',  'parent_id', 'score', 'subreddit', 'subreddit_id', 'year', 'month')\
         .write.parquet(output + '/comments', mode='overwrite', compression='gzip')
 
     
@@ -88,10 +92,12 @@ def main(output):
 
 
 if __name__ == '__main__':
-    output = sys.argv[1]
+    submissions_path = sys.argv[1]
+    comments_path  = sys.argv[2]
+    output = sys.argv[3]
     spark = SparkSession.builder.appName('reddit extraction').getOrCreate()
     sc = spark.sparkContext
     spark.sparkContext.setLogLevel("WARN")
     spark.conf.set("spark.sql.debug.maxToStringFields", "1000")
-    main(output)
+    main(submissions_path, comments_path, output)
     
