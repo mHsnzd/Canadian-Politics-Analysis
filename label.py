@@ -1,5 +1,5 @@
 #run this:
-#spark-submit transformation.py reddit-2021 labeled-reddit-2021
+#spark-submit label.py reddit-2021 labeled-reddit-2021
 import sys
 from pyspark.sql import SparkSession, functions, types, Row
 from pyspark.sql.functions import *
