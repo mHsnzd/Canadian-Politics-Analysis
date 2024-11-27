@@ -19,7 +19,6 @@ default_args = {
 
 dt = datetime.combine(datetime.today(), time.min)
 
-
 dag = DAG(
     dag_id='reddit_etl_aws',
     default_args=default_args,
