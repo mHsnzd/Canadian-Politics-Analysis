@@ -1,5 +1,5 @@
 #run this:
-#spark-submit label.py reddit-2021 labeled-reddit-2021
+#spark-submit transformation.py reddit-2021 labeled-reddit-2021
 import sys
 from pyspark.sql import SparkSession, functions, types, Row
 from pyspark.sql.functions import *
@@ -7,26 +7,37 @@ from pyspark.sql.types import TimestampType
 import re
 
 
-def main(input, output):
-    comments = spark.read.parquet(f"{input}/comments")
-    submissions = spark.read.parquet(f"{input}/submissions")
+def main(submissions_path, comments_path, output):
+    submissions = spark.read.parquet(submissions_path)
+    comments = spark.read.parquet(comments_path)
     
-    
-    submissions = submissions.withColumn("datetime", from_unixtime("created_utc").cast(TimestampType()))\
-                            .withColumn("datetime", from_utc_timestamp("datetime", "America/Los_Angeles"))
+    #check if datetime aligns with year and month
+    submissions = submissions.drop("year", "month")\
+                    .withColumn("datetime", from_unixtime("created_utc").cast(TimestampType()))\
+                    .withColumn("datetime", from_utc_timestamp("datetime", "America/Los_Angeles"))\
+                    .withColumn("year", year("datetime")) \
+                    .withColumn("month", month("datetime")) \
+                    .withColumn("day", dayofmonth("datetime"))
         
-    comments = comments.withColumn("datetime", from_unixtime("created_utc").cast(TimestampType()))\
-                    .withColumn("datetime", from_utc_timestamp("datetime", "America/Los_Angeles"))
+    comments = comments.drop("year", "month")\
+                    .withColumn("datetime", from_unixtime("created_utc").cast(TimestampType()))\
+                    .withColumn("datetime", from_utc_timestamp("datetime", "America/Los_Angeles"))\
+                    .withColumn("year", year("datetime")) \
+                    .withColumn("month", month("datetime")) \
+                    .withColumn("day", dayofmonth("datetime"))
   
     liberal_keywords = ["trudeau", "justin trudeau", "liberals", "liberal party", "libparty", "justintrudeau"]
     liberal_pattern = '|'.join(re.escape(word) for word in liberal_keywords)
 
     conservative_keywords = ["conservatives", "conservative party", "scheer", "andrew scheer", "o'toole", "erin o'toole"]
     conservative_pattern = '|'.join(re.escape(word) for word in conservative_keywords)
-
-    comments = comments.withColumn("is_conservative", when(col("body").rlike(conservative_pattern), 1).otherwise(0))\
+    
+    comments = comments.withColumn("body", lower(comments["body"]))\
+        .withColumn("is_conservative", when(col("body").rlike(conservative_pattern), 1).otherwise(0))\
         .withColumn("is_liberal", when(col("body").rlike(liberal_pattern), 1).otherwise(0))
-    submissions = submissions.withColumn("is_conservative", when(col("title").rlike(conservative_pattern), 1).otherwise(0))\
+        
+    submissions = submissions.withColumn("title", lower(submissions["title"]))\
+        .withColumn("is_conservative", when(col("title").rlike(conservative_pattern), 1).otherwise(0))\
         .withColumn("is_liberal", when(col("title").rlike(liberal_pattern), 1).otherwise(0))
     
 
@@ -38,8 +49,14 @@ def main(input, output):
     .otherwise("neither")
     )
     
-    #seperate comments that contains keywords from both parties, comment out for now, might add it back
-    """
+    submissions = submissions.withColumn(
+    "label",
+    when((col("is_liberal") == 1) & (col("is_conservative") == 0), "liberal")
+    .when((col("is_liberal") == 0) & (col("is_conservative") == 1), "conservative")
+    .when((col("is_liberal") == 1) & (col("is_conservative") == 1), "both")
+    .otherwise("neither")
+    )
+    
     comments_segment = (
     comments.filter(col("label") == "both")
     .withColumn("body", explode(split(col("body"), "[.,;!?]")))
@@ -57,13 +74,10 @@ def main(input, output):
     .otherwise("neither")
     )
     
-    comments = comments.filter(col("label")!="both").union(comments_segment)
-    #comments.groupBy("label").agg(count("*")).show()
-    #comments.filter(col("label") == "both").select(["label", "body"]).show(10, truncate = False)
+    comments = comments.filter(col("label")!="both").union(comments_segment).drop("is_liberal", "is_conservative")
     
-    """
-    comments.write.mode("overwrite").parquet(f"{output}/comments")
-    submissions.write.mode("overwrite").parquet(f"{output}/submissions")
+    comments.drop("is_liberal", "is_conservative").write.mode("overwrite").partitionBy("month", "day").parquet(f"{output}/comments")
+    submissions.drop("is_liberal", "is_conservative").write.mode("overwrite").partitionBy("month", "day").parquet(f"{output}/submissions")
     
     
 if __name__ == '__main__':
@@ -71,6 +85,7 @@ if __name__ == '__main__':
     sc = spark.sparkContext
     spark.sparkContext.setLogLevel("WARN")
     spark.conf.set("spark.sql.debug.maxToStringFields", "1000")
-    input = sys.argv[1]
-    output = sys.argv[2]
-    main(input, output)
+    submissions_path = sys.argv[1]
+    comments_path  = sys.argv[2]
+    output = sys.argv[3]
+    main(submissions_path, comments_path, output)
