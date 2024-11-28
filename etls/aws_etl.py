@@ -1,5 +1,5 @@
 import s3fs
-import os 
+import os, glob
 from datetime import datetime, timedelta
 import pandas as pd
 from utils.constants import *
@@ -107,6 +107,28 @@ def upload_to_s3(s3: s3fs.S3FileSystem, file_path: str, bucket:str, s3_file_name
         print('File uploaded to s3')
     except FileNotFoundError:
         print('The file was not found')
+
+def get_parquet_file(folders):
+    files = []
+    for folder in folders:
+        # Use glob to find all .parquet files in the folder
+        parquet_files = glob.glob(os.path.join(folder, "*.parquet"))
+
+        if parquet_files:
+            files.append(parquet_files[0])
+    return files
+
+def upload_folder_s3(dt: datetime):
+    output_folders = [f"{OUTPUT_PATH}/transformed/reddit_comments_{dt.strftime('%Y%m%d')}", 
+    f"{OUTPUT_PATH}/transformed/reddit_submissions_{dt.strftime('%Y%m%d')}"]
+    output_files = get_parquet_file(output_folders)
+    s3 = connect_to_s3()
+    for file_path, folder in zip(output_files, output_folders):
+        try:
+            s3.put(file_path, AWS_BUCKET_NAME+'/transformed/'+ f"{folder.split('/')[-1]}.parquet")
+            print('File uploaded to s3')
+        except FileNotFoundError:
+            print(f'The file {file_path} was not found')
 
 
 def transform_data(df: pd.DataFrame):
