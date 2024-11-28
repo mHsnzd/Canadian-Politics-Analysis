@@ -1,5 +1,5 @@
 #run this:
-#spark-submit transformation.py reddit-2021 labeled-reddit-2021
+#spark-submit labelParty.py reddit-2019/submissions /user/tga63/clean_comments_2019 labele-reddit-2019-new
 import sys
 from pyspark.sql import SparkSession, functions, types, Row
 from pyspark.sql.functions import *
@@ -59,7 +59,7 @@ def main(submissions_path, comments_path, output):
     
     comments_segment = (
     comments.filter(col("label") == "both")
-    .withColumn("body", explode(split(col("body"), "[.,;!?]")))
+    .withColumn("body", explode(split(col("body"), "[.]")))
     .filter(col("body").rlike("\\S"))
     )
     
@@ -73,12 +73,11 @@ def main(submissions_path, comments_path, output):
     .when((col("is_liberal") == 1) & (col("is_conservative") == 1), "both")
     .otherwise("neither")
     )
-    
+
     comments = comments.filter(col("label")!="both").union(comments_segment).drop("is_liberal", "is_conservative")
     
     comments.drop("is_liberal", "is_conservative").write.mode("overwrite").partitionBy("month", "day").parquet(f"{output}/comments")
     submissions.drop("is_liberal", "is_conservative").write.mode("overwrite").partitionBy("month", "day").parquet(f"{output}/submissions")
-    
     
 if __name__ == '__main__':
     spark = SparkSession.builder.appName('reddit transformation').getOrCreate()

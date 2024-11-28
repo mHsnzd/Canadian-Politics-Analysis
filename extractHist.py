@@ -1,5 +1,5 @@
 #Run this:
-#spark-submit extract.py /courses/datasets/reddit_submissions_repartitioned/year=2020 /courses/datasets/reddit_comments_repartitioned/year=2020 reddit-2020
+#spark-submit extractHist.py /courses/datasets/reddit_submissions_repartitioned/year=2020 /courses/datasets/reddit_comments_repartitioned/year=2020 reddit-2020
 import sys
 from pyspark.sql import SparkSession, functions, types, Row
 
