@@ -14,8 +14,8 @@ from pyspark.sql import SparkSession, functions, types, Row
 # Constants
 SENTIMENT_LABEL_FIELD = 'sentiment'
 SENTIMENT_SCORE_FIELD = 'sentiment_score'
-AVG_GROUP_BY_FIELDS = ['subreddit', 'month', 'label']
-COUNT_GROUP_BY_FIELDS = ['subreddit', 'month', 'label', 'sentiment']
+AVG_GROUP_BY_FIELDS = ['subreddit', 'year', 'month', 'day', 'label']
+COUNT_GROUP_BY_FIELDS = ['subreddit', 'year', 'month', 'day', 'label', 'sentiment']
 AVG_SCORE_FIELD = 'average_sentiment_score'
 COUNT_LABEL_FIELD = 'sentiment_count'
 

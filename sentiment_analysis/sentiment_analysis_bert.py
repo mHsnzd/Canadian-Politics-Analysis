@@ -18,17 +18,17 @@ from pyspark.sql import SparkSession, functions, types, Row
 MAX_SEQ_LENGTH = 512        # maximum sequence length for the pretrained model 
 COMMENT_TXT_FIELD = 'body' 
 PARTY_LABEL_FIELD = 'label'
-PARTY_LABELS = ['conservative', 'liberal'] 
+PARTY_LABELS = ['conservative', 'liberal']
 SENTIMENT_LABEL_FIELD = 'sentiment'
 SENTIMENT_SCORE_FIELD = 'sentiment_score'
-PARTITION_BY_FIELDS = ['subreddit','month']
+PARTITION_BY_FIELDS = ['subreddit','year','month','day']
 
 
 def main(input, output):
     # Read data from files
     comments_df = spark.read.parquet(input)
-    # Ignore neither or both labels
-    comments_df = comments_df.filter(comments_df[PARTY_LABEL_FIELD].isin(PARTY_LABELS))
+    # # Ignore neither or both labels
+    # comments_df = comments_df.filter(comments_df[PARTY_LABEL_FIELD].isin(PARTY_LABELS))
 
     # Define and use the pretrained model
     model = pipeline(
@@ -54,7 +54,7 @@ def main(input, output):
         analyze_sentiment(comments_df[COMMENT_TXT_FIELD])
     ) 
 
-    result = analyzed_comments_df.withColumns({
+    result_df = analyzed_comments_df.withColumns({
         SENTIMENT_LABEL_FIELD: analyzed_comments_df['sentiment_analysis.label'],
         SENTIMENT_SCORE_FIELD: 
             functions.when(
@@ -68,7 +68,7 @@ def main(input, output):
 
     # Write the result to a Parquet file
     # result.show(truncate=False)
-    result.write\
+    result_df.write\
         .partitionBy(PARTITION_BY_FIELDS)\
         .parquet(output, mode='overwrite')  
 
