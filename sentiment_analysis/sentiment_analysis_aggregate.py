@@ -38,7 +38,7 @@ def main(input, output):
         ).sort(COUNT_GROUP_BY_FIELDS)
     
     # Write the result to a CSV file
-    avg_score_result.coalesce(1).write.csv(output+'/average_sentiment_score', mode='overwrite') 
+    avg_score_result.coalesce(1).write.csv(output+'/average_sentiment_score', mode='overwrite', header=True) 
 
     count_sentiment_result.coalesce(1).write.csv(output+'/count_sentiment_type', mode='overwrite', header=True)
 
