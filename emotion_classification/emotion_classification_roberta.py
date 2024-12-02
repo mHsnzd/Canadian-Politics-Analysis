@@ -1,10 +1,11 @@
 """
-This script performs emotion classification on the comments using a Hugging Face pretrained model(SamLowe/roberta-base-go_emotions). 
+This script performs emotion classification on the comments using a Hugging Face pretrained model(j-hartmann/emotion-english-distilroberta-base). 
 
-Out of the 28 possible outcomes, only the emotion with the highest probablity is taken into account.
+Out of the 6 possible emotion and the neutral class, we want the most prevalent emotion:
+anger, disgust, fear, joy, neutral, sadness, surprise
 
 To locally run the script use the command:
-spark-submit emotion_dection_roberta.py input-parquet-path output-parquet-path
+spark-submit emotion_classification_roberta.py input-parquet-path output-parquet-path
 """
 
 
@@ -15,7 +16,7 @@ from pyspark.sql import SparkSession, functions, types, Row
 
 
 # Constants
-MAX_SEQ_LENGTH = 512        # maximum sequence length for the pretrained model 
+MAX_SEQ_LENGTH = 128       # maximum sequence length for the pretrained model 
 COMMENT_TXT_FIELD = 'body' 
 PARTY_LABEL_FIELD = 'label'
 PARTY_LABELS = ['conservative', 'liberal']
@@ -31,7 +32,7 @@ def main(input, output):
     # Define the pretrained classification model
     emotion_classifier = pipeline(
         'text-classification',
-        model='SamLowe/roberta-base-go_emotions',
+        model='j-hartmann/emotion-english-distilroberta-base', #'SamLowe/roberta-base-go_emotions'
         top_k = 1)
 
     # Define a udf to apply the classification model on each comment body
@@ -50,7 +51,7 @@ def main(input, output):
         classify_emotions(comments_df[COMMENT_TXT_FIELD])
     ) 
 
-    result_df.show(vertical=True)
+    # result_df.show(vertical=True)
 
     # Write the result to a Parquet file
     # result.show(truncate=False)
