@@ -1,11 +1,11 @@
 '''
-This script detects whether hate speech is present in the comments or not using a hugging face pretrained model(Hate-speech-CNERG/dehatebert-mono-english). 
+This script detects whether hate speech is present in the comments or not using a hugging face pretrained model(Hate-speech-CNERG/bert-base-uncased-hatexplain). 
 
 possible outcomes:
-HATE, NON_HATE
+Hatespeech, Offensive, or Normal
 
 To locally run the script use the command:
-spark-submit emotion_classification_roberta.py input-parquet-path output-parquet-path
+spark-submit hate_detection_bert.py input-parquet-path output-parquet-path
 '''
 
 
@@ -16,7 +16,7 @@ from pyspark.sql import SparkSession, functions, types, Row
 
 
 # Constants
-MAX_SEQ_LENGTH = 512        # maximum sequence length for the pretrained model 
+MAX_SEQ_LENGTH = 256        # maximum sequence length for the pretrained model 
 COMMENT_TXT_FIELD = 'body' 
 PARTY_LABELS = ['conservative', 'liberal']
 HATE_SPEECH_LABEL_FIELD = 'hate_speech'
@@ -29,14 +29,15 @@ def main(input, output):
     # Define the pretrained classification model
     hate_detector = pipeline(
         'text-classification',
-        model='Hate-speech-CNERG/dehatebert-mono-english')
+        model='Hate-speech-CNERG/bert-base-uncased-hatexplain'#'Hate-speech-CNERG/dehatebert-mono-english'
+    )
 
     # Define a udf to apply the classification model on each comment body
     @functions.udf(returnType=types.StringType())
     def detect_hate(comment):
         '''
         Truncate the body of comment to match the max size acceptable by the model
-        and then apply the model on it, return whether the comment contains hate speech
+        and then apply the model on it, return whether the comment contains hate speech.
         '''
         truncated_comment = comment[:MAX_SEQ_LENGTH]
         result = hate_detector.predict(truncated_comment)[0]
@@ -51,9 +52,9 @@ def main(input, output):
     # result_df.show(vertical=True)
 
     # Write the result to a Parquet file
-    # result_df.write\
-    #     .partitionBy(PARTITION_BY_FIELDS)\
-    #     .parquet(output, mode='overwrite')  
+    result_df.write\
+        .partitionBy(PARTITION_BY_FIELDS)\
+        .parquet(output, mode='overwrite')  
 
 
 if __name__ == '__main__':

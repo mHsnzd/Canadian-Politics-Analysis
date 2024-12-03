@@ -17,8 +17,7 @@ import re
 COMMENT_TXT_FIELD = 'body' 
 EMOJI_FIELD = 'emoji'
 EMOJI_COUNT_FIELD = 'emoji_count'
-EMOJI_GROUP_BY_FIELDS = ['subreddit', 'year', 'month', 'day', 'label']
-# EMOJI_GROUP_BY_FIELDS = ['emoji', 'subreddit', 'year', 'month', 'day', 'label', 'sentiment', 'emotion']
+EMOJI_GROUP_BY_FIELDS = ['subreddit', 'year', 'month', 'day', 'label', 'sentiment', 'emotion', 'hate_speech']
 
 
 @functions.udf(returnType=types.ArrayType(types.StringType()))
@@ -70,7 +69,7 @@ if __name__ == '__main__':
 
     # Initializing sparksession with necessary packages (Alternatively use spark = sparknlp.start())
     spark = SparkSession.Builder() \
-        .appName('Sentiment Analysis Bert') \
+        .appName('Emoji Count') \
         .getOrCreate()
     assert spark.version >= '3.0' # Make sure we have Spark 3.0+
     spark.sparkContext.setLogLevel('WARN')

@@ -16,7 +16,7 @@ from pyspark.sql import SparkSession, functions, types, Row
 
 
 # Constants
-MAX_SEQ_LENGTH = 128       # maximum sequence length for the pretrained model 
+MAX_SEQ_LENGTH = 256       # maximum sequence length for the pretrained model 
 COMMENT_TXT_FIELD = 'body' 
 PARTY_LABEL_FIELD = 'label'
 PARTY_LABELS = ['conservative', 'liberal']
