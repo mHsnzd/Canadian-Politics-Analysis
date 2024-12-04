@@ -18,6 +18,7 @@ default_args = {
 
 dt = datetime.combine(datetime.today(), time.min)
 
+dt = datetime(2024,11,15)
 # Define the DAG
 dag = DAG(
     dag_id='reddit_etl_transform',
@@ -28,25 +29,48 @@ dag = DAG(
 )
 
 # Define the task using SparkSubmitOperator
-transform_task = SparkSubmitOperator(
+clean_task = SparkSubmitOperator(
     task_id='reddit_transform_data',
-    application='pipelines/transform_pipeline.py', 
-    application_args=['20241114', OUTPUT_PATH],  
-    # application_args=[dt.strftime('%Y%m%d'), OUTPUT_PATH],  
+    application='transform/clean_data.py',   
+    application_args=[dt.strftime('%Y%m%d'), OUTPUT_PATH],  
     conn_id='spark_default',
     verbose=True,
     dag=dag
 )
 
+sentiment_analysis = SparkSubmitOperator(
+    task_id='sentiment_analysis',
+    application='transform/sentiment_analysis.py', 
+    application_args=[dt.strftime('%Y%m%d'), OUTPUT_PATH],  
+    conn_id='spark_default',
+    verbose=True,
+    dag=dag
+)
+
+emotion_classification = SparkSubmitOperator(
+    task_id='emotion_classification',
+    application='transform/emotion_classification.py',   
+    application_args=[dt.strftime('%Y%m%d'), OUTPUT_PATH],  
+    conn_id='spark_default',
+    verbose=True,
+    dag=dag
+)
+
+hate_detector = SparkSubmitOperator(
+    task_id='hate_detector',
+    application='transform/hate_detector.py', 
+    application_args=[dt.strftime('%Y%m%d'), OUTPUT_PATH],  
+    conn_id='spark_default',
+    verbose=True,
+    dag=dag
+)
 upload_task = PythonOperator(
     task_id=f'reddit_upload_transformed_data',
     python_callable=upload_folder_s3,
     op_kwargs={
-        # 'dt': dt
-        'dt': datetime(2024,11,14)
+        'dt': dt
     },
     dag=dag
 )
 
-
-transform_task >> upload_task
+clean_task >> sentiment_analysis >> emotion_classification >> hate_detector >> upload_task
