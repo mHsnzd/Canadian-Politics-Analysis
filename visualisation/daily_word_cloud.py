@@ -68,7 +68,7 @@ def main(input, output):
     # Customize the word cloud
     wordcloud = WordCloud(width=800, height=400,
         background_color='white',
-        max_words=100,
+        max_words=50,
         max_font_size=60,
         colormap='magma',
         prefer_horizontal=0.5
@@ -84,7 +84,7 @@ def main(input, output):
     # Customize the word cloud
     wordcloud = WordCloud(width=800, height=400,
         background_color='white',
-        max_words=100,
+        max_words=50,
         max_font_size=60,
         colormap='magma',
         prefer_horizontal=0.5

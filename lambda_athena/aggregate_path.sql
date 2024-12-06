@@ -11,8 +11,7 @@
             AVG(score) AS average_upvotes
         FROM 
             reddit.nlp
-        WHERE "$path" != 's3://cmpt732/transformed/reddit_comments_20241114.parquet'
-              AND "$path" NOT LIKE 's3://cmpt732/transformed/reddit_submissions%'
+        WHERE "$path" NOT LIKE 's3://cmpt732/transformed/reddit_submissions%'
         GROUP BY 
             year, 
             month,

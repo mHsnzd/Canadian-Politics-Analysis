@@ -1,3 +1,9 @@
+'''
+This script is automatically triggered whenever daily transformed data is added to the S3 bucket to perform some basic aggregation.
+
+The script isn't run locally, it is a lambda function ran using Amazon Lambda
+'''
+
 import boto3
 
 def lambda_handler(event, context):
