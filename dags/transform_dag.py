@@ -1,0 +1,52 @@
+from airflow import DAG
+from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.operators.python import PythonOperator
+
+from datetime import datetime, time
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.constants import OUTPUT_PATH
+from etls.aws_etl import upload_folder_s3
+
+# Define default arguments for the DAG
+default_args = {
+    'owner': 'EthanDo',
+    'start_date': datetime(2024, 11, 20),  # Start date for the DAG
+}
+
+dt = datetime.combine(datetime.today(), time.min)
+
+# Define the DAG
+dag = DAG(
+    dag_id='reddit_etl_transform',
+    default_args=default_args,
+    schedule_interval='30 1 * * *',  # Runs daily at 12:30 AM
+    catchup=False,
+    tags=['reddit', 'etl', 'pipeline', 'transform', 'canada']
+)
+
+# Define the task using SparkSubmitOperator
+transform_task = SparkSubmitOperator(
+    task_id='reddit_transform_data',
+    application='pipelines/transform_pipeline.py', 
+    application_args=['20241114', OUTPUT_PATH],  
+    # application_args=[dt.strftime('%Y%m%d'), OUTPUT_PATH],  
+    conn_id='spark_default',
+    verbose=True,
+    dag=dag
+)
+
+upload_task = PythonOperator(
+    task_id=f'reddit_upload_transformed_data',
+    python_callable=upload_folder_s3,
+    op_kwargs={
+        # 'dt': dt
+        'dt': datetime(2024,11,14)
+    },
+    dag=dag
+)
+
+
+transform_task >> upload_task
