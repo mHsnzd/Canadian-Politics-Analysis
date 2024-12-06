@@ -13,6 +13,7 @@ x-airflow-common:
     - ./dags:/opt/airflow/dags
     - ./data:/opt/airflow/data
     - ./etls:/opt/airflow/etls
+    - ./transform:/opt/airflow/transform
     - ./logs:/opt/airflow/logs
     - ./pipelines:/opt/airflow/pipelines
     - ./utils:/opt/airflow/utils

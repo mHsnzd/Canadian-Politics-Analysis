@@ -39,6 +39,8 @@ def download_s3_folder(bucket_name, s3_folder, local_dir):
 
         # Download file to the local directory
         local_file_path = os.path.join(local_dir, file_name)
+        if os.path.exists(local_file_path):
+            continue
         print(f"Downloading {file} to {local_file_path}...")
         s3.get(file, local_file_path)
 
