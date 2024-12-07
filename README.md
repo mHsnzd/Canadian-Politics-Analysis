@@ -6,7 +6,9 @@ In this project, we developed an automated ETL pipeline to crawl Reddit comments
 ## Documentation 
 
 [Report](https://github.sfu.ca/zta23/CMPT732Project/blob/9078fd23bc3c5b6b8530fa5f7ac9bd5dee0eca4f/CMPT_732___Report.pdf)
+
 [Video Presentation](https://drive.google.com/file/d/12Frf1zKLjWzxIBXkFeni1EzBZjPkalFC/view)
+
 [Dashboard](https://github.sfu.ca/zta23/CMPT732Project/blob/9d967937164c6450a035288f67d2a7a150c7a398/Final%20Project%20Dashboard-2.pbix)
 
 ## Crawling Reddit Data Setup
