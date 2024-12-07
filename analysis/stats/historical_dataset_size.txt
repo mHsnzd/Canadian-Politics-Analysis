@@ -1,0 +1,42 @@
+Number of rows in /user/zta23/reddit-2019/comments: 3090414
+--------------------------------------------------
+Number of rows in /user/zta23/reddit-2020/comments: 3045410
+--------------------------------------------------
+Number of rows in /user/zta23/reddit-2021/comments: 3889850
+--------------------------------------------------
+Number of rows in /user/tga63/clean_comments_2019: 2698365
+--------------------------------------------------
+Number of rows in /user/tga63/clean_comments_2020: 2609611
+--------------------------------------------------
+Number of rows in /user/tga63/clean_comments_2021: 3217625
+--------------------------------------------------
+Number of rows in /user/zta23/label-reddit-2019/comments: 2894460
+--------------------------------------------------
+Number of rows in /user/zta23/label-reddit-2020/comments: 2706743
+--------------------------------------------------
+Number of rows in /user/zta23/label-reddit-2021/comments: 3374119
+--------------------------------------------------
+Number of rows in final-new/reassembled-comments-2019: 238792
+--------------------------------------------------
+Number of rows in final-new/reassembled-comments-2020: 154292
+--------------------------------------------------
+Number of rows in final-new/reassembled-comments-2021: 244347
+--------------------------------------------------
+Number of rows in final-new/sentiment-reddit-2019: 238792
+--------------------------------------------------
+Number of rows in final-new/sentiment-reddit-2020: 154292
+--------------------------------------------------
+Number of rows in final-new/sentiment-reddit-2021: 244347
+--------------------------------------------------
+Number of rows in final-new/emotion-reddit-2019: 238792
+--------------------------------------------------
+Number of rows in final-new/emotion-reddit-2020: 154292
+--------------------------------------------------
+Number of rows in final-new/emotion-reddit-2021: 244347
+--------------------------------------------------
+Number of rows in final-new/hate-detection-reddit-2019: 238792
+--------------------------------------------------
+Number of rows in final-new/hate-detection-reddit-2020: 154292
+--------------------------------------------------
+Number of rows in final-new/hate-detection-reddit-2021: 244347
+--------------------------------------------------
